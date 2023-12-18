@@ -3,13 +3,16 @@
 #include <fstream>
 #include <math.h>
 #include <omp.h>
+#include <ctime>
 
 using namespace std;
 int N = 1024;
+int n_thr = 4;
 
 
 double len(vector<double>& v1){
     double l = 0;
+    #pragma omp parallel for num_threads(n_thr) shared(l)
     for(int i = 0; i < N; i++){
         l += v1[i]*v1[i];
     }
@@ -19,6 +22,7 @@ double len(vector<double>& v1){
 
 vector<double> norm (vector<double> v1){
     double l = len(v1);
+    #pragma omp parallel for num_threads(n_thr) shared(l)
     for(int i = 0; i < N; i++){
         v1[i] = v1[i]/l;
     }
@@ -27,6 +31,7 @@ vector<double> norm (vector<double> v1){
 
 double scalar(vector<double>& v1, vector<double>& v2){
     double sc = 0;
+    #pragma omp parallel for num_threads(n_thr) shared(sc)
     for(int i = 0; i < N; i++){
         sc += v1[i]*v2[i];
     }
@@ -36,6 +41,7 @@ double scalar(vector<double>& v1, vector<double>& v2){
 vector<double> proec(vector<double>& v1, vector<double>& v2){
     vector<double> pr_v1(N);
     double koef = scalar(v1, v2) / scalar(v2, v2);
+    #pragma omp parallel for num_threads(n_thr) shared(pr_v1)
     for(int i = 0; i < N; i++){
         pr_v1[i] = koef * v2[i];
     }
@@ -44,6 +50,7 @@ vector<double> proec(vector<double>& v1, vector<double>& v2){
 
 vector<double> raz(vector<double>& v1, vector<double>& v2){
     vector<double> r(N);
+    #pragma omp parallel for num_threads(n_thr) shared(r)
     for(int i = 0; i < N; i++){
         r[i] = v1[i] - v2[i];
     }
@@ -68,7 +75,7 @@ int main(){
     fin.close();
     ///cout << v[0] << " " << v[1023][0];
     int c_norm_v = 0;
-    
+    double start_time =  omp_get_wtime();
     double l = len(v[0]);
     for(int i = 0; i < N; i++){
         answ[0][i] = v[0][i] / l; 
@@ -93,5 +100,8 @@ int main(){
         fout << '\n';
     }
     fout.close();
+    double end_time = omp_get_wtime();
+    double search_time = end_time - start_time;
+    cout << search_time << endl;
     return 0;
 }
